@@ -9,24 +9,28 @@
       <div style="align-self: center;">
         <h4 style="display:flex; justify-content:space-between;">
           <span class="button">u</span> upload dell'immagine</h4>
-        <h4 style="display:flex; justify-content:space-between;"><span class="button">frecce</span> sposta il quadrato indicativo</h4>
-        <h4 style="display:flex; justify-content:space-between;"><span class="button">spazio</span> scopri la porzione di immagine</h4>
-        <h4 style="display:flex; justify-content:space-between;"><span class="button">click</span> sposta il quadro indicativo <br />nella posizione desiderata</h4>
-        <h4 style="display:flex; justify-content:space-between;"><span class="button">h</span> mostra/nascondi questo popup</h4>
+        <h4 style="display:flex; justify-content:space-between;">
+          <span class="button">frecce</span> sposta il quadrato indicativo</h4>
+        <h4 style="display:flex; justify-content:space-between;">
+          <span class="button">spazio</span> scopri la porzione di immagine</h4>
+        <h4 style="display:flex; justify-content:space-between;">
+          <span class="button">click</span> sposta il quadro indicativo <br />nella posizione desiderata</h4>
+        <h4 style="display:flex; justify-content:space-between;">
+          <span class="button">h</span> mostra/nascondi questo popup</h4>
       </div>
 
     </div>
 
     <svg ref="svg" xmlns="http://www.w3.org/2000/svg" x="0" y="0" :width="maxWidth" :height="maxHeight" :viewBox="viewBox" class="overlayed">
-        <defs>
+      <defs>
         <mask id="theMask">
-          <rect v-for="(rect, index) in rectList" id="masker" fill="#fff" width="100" height="100" :key="index" :x="rect.x" :y="rect.y" />
+          <rect v-for="(rect, index) in rectList" id="masker" fill="#fff" :width="rect.l" :height="rect.l" :key="index" :x="rect.x" :y="rect.y" />
         </mask>
       </defs>
       <g id="maskReveal" mask="url(#theMask)">
-        <image :xlink:href="image" x="0" y="0" :width="maxWidth" :height="maxHeight" @click="handleMouseClick" />
+        <image :xlink:href="image" x="0" y="0" :width="maxWidth" :height="maxHeight" @mousedown="handleMouseClick" @mousemove="handleMouseMovement"/>
       </g>
-      <rect fill="#000" width="100" height="100" :x="cx" :y="cy" />
+      <rect fill="#000" :width="l" :height="l" :x="cx" :y="cy" />
     </svg>
 
   </div>
@@ -34,8 +38,6 @@
 
 <script lang="ts">
 import Vue from "vue";
-
-
 
 export default Vue.extend({
   name: "home",
@@ -45,6 +47,7 @@ export default Vue.extend({
   },
   data() {
     return {
+      l: 20,
       cx: 0,
       cy: 0,
       rectList: [],
@@ -57,6 +60,9 @@ export default Vue.extend({
     };
   },
   computed: {
+    movement() {
+      return this.l / 2;
+    },
     viewBox() {
       return `0 0 ${this.maxWidth} ${this.maxHeight}`;
     },
@@ -69,14 +75,12 @@ export default Vue.extend({
   },
   methods: {
     handleMouseMovement(e) {
-      this.cx = e.offsetX;
-      this.cy = e.offsetY;
+      this.cx = e.offsetX - this.movement;
+      this.cy = e.offsetY - this.movement;
     },
     handleMouseClick(e) {
-      this.cx = e.offsetX - 50;
-      this.cy = e.offsetY - 50;
-      /* var rect = { x: this.cx, y: this.cy };
-      this.rectList.push(rect);*/
+      var rect = { x: this.cx, y: this.cy, l: this.l };
+      this.rectList.push(rect);
     },
     handleFileLoad(e) {
       var files = e.target.files || e.dataTransfer.files;
@@ -100,24 +104,25 @@ export default Vue.extend({
     handleKeyDown(e) {
       switch (e.code) {
         case "ArrowDown":
-          if (this.cy < this.maxHeight) this.cy += 50;
+          if (this.cy < this.maxHeight) this.cy += this.movement;
           break;
         case "ArrowUp":
-          if (this.cy > 0) this.cy -= 50;
+          if (this.cy > 0) this.cy -= this.movement;
           break;
         case "ArrowLeft":
-          if (this.cx > 0) this.cx -= 50;
+          if (this.cx > 0) this.cx -= this.movement;
           break;
         case "ArrowRight":
-          if (this.cx < this.maxWidth) this.cx += 50;
+          if (this.cx < this.maxWidth) this.cx += this.movement;
           break;
       }
     },
     handleKeyUp(e) {
+      console.log(e);
       e.preventDefault();
       switch (e.code) {
         case "Space":
-          var rect = { x: this.cx, y: this.cy };
+          var rect = { x: this.cx, y: this.cy, l: this.l };
           this.rectList.push(rect);
           break;
         case "KeyU":
@@ -125,6 +130,12 @@ export default Vue.extend({
           break;
         case "KeyH":
           this.needHelp = !this.needHelp;
+          break;
+        case "Period":
+          this.l += 5;
+          break;
+        case "Comma":
+          if (this.l > 5) this.l -= 5;
           break;
       }
     }
@@ -137,7 +148,7 @@ export default Vue.extend({
   display: flex;
   flex-direction: column;
   justify-content: center;
-  height: 50vh;
+  height: 80vh;
   width: 80vw;
 
   z-index: 999;
