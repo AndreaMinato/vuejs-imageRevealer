@@ -21,14 +21,14 @@
 
     </div>
 
-    <svg ref="svg" xmlns="http://www.w3.org/2000/svg" x="0" y="0" :width="maxWidth" :height="maxHeight" :viewBox="viewBox" class="overlayed">
+    <svg ref="svg" xmlns="http://www.w3.org/2000/svg" x="0" y="0" :width="maxWidth" :height="maxHeight" :viewBox="viewBox" class="overlayed" @mousedown="isMouseClicked = true" @mouseup="isMouseClicked = false" @click="handleMouseClick" @mousemove="handleMouseMovement">
       <defs>
         <mask id="theMask">
           <rect v-for="(rect, index) in rectList" id="masker" fill="#fff" :width="rect.l" :height="rect.l" :key="index" :x="rect.x" :y="rect.y" />
         </mask>
       </defs>
       <g id="maskReveal" mask="url(#theMask)">
-        <image :xlink:href="image" x="0" y="0" :width="maxWidth" :height="maxHeight" @mousedown="handleMouseClick" @mousemove="handleMouseMovement"/>
+        <image :xlink:href="image" x="0" y="0" :width="maxWidth" :height="maxHeight" />
       </g>
       <rect fill="#000" :width="l" :height="l" :x="cx" :y="cy" />
     </svg>
@@ -47,6 +47,7 @@ export default Vue.extend({
   },
   data() {
     return {
+      isMouseClicked :false,
       l: 20,
       cx: 0,
       cy: 0,
@@ -74,9 +75,16 @@ export default Vue.extend({
     }
   },
   methods: {
+  dode(){
+    alert();
+  },
     handleMouseMovement(e) {
       this.cx = e.offsetX - this.movement;
       this.cy = e.offsetY - this.movement;
+      if(this.isMouseClicked){
+        var rect = { x: this.cx, y: this.cy, l: this.l };
+        this.rectList.push(rect);
+      }
     },
     handleMouseClick(e) {
       var rect = { x: this.cx, y: this.cy, l: this.l };
@@ -118,7 +126,6 @@ export default Vue.extend({
       }
     },
     handleKeyUp(e) {
-      console.log(e);
       e.preventDefault();
       switch (e.code) {
         case "Space":
